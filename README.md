@@ -8,7 +8,7 @@ The `Iterator::scan` method that the Rust standard library provides are overcomp
 
 ## Usage
 
-The usage of this crate is included in the [documentation](https://docs.rs/iter-scan).
+The usage of this crate is included in the [documentation](https://docs.rs/iter-scan/latest/iter_scan/trait.IterScan.html).
 
 ## License
 
