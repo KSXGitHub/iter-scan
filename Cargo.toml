@@ -1,0 +1,26 @@
+[package]
+name = "iter-scan"
+description = "Iterator scan methods that don't suck"
+version = "0.0.0"
+authors = ["khai96_ <hvksmr1996@gmail.com>"]
+edition = "2021"
+readme = "README.md"
+license = "MIT"
+documentation = "https://docs.rs/iter-scan"
+repository = "https://github.com/KSXGitHub/iter-scan.git"
+keywords = [
+  "scan",
+  "trait",
+  "fp",
+]
+categories = ["no-std", "rust-patterns"]
+include = [
+  "lib.rs",
+  "/Cargo.toml",
+  "/README.md",
+  "/LICENSE.md",
+]
+
+[lib]
+name = "iter_scan"
+path = "lib.rs"
