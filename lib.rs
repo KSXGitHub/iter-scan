@@ -1,6 +1,7 @@
 #![doc = include_str!("README.md")]
 #![no_std]
 use core::marker::PhantomData;
+use replace_with::replace_with_or_abort_and_return;
 
 type IdFn<X> = fn(X) -> X;
 type DupFn<X> = fn(X) -> (X, X);
@@ -36,7 +37,7 @@ pub trait IterScan: Iterator + Sized {
     ) -> Scan<Self, DupFn<State>, Compute, State>
     where
         State: Clone,
-        Compute: FnMut(&State, Self::Item) -> State,
+        Compute: FnMut(State, Self::Item) -> State,
     {
         Scan {
             compute,
@@ -75,7 +76,7 @@ pub trait IterScan: Iterator + Sized {
     ) -> Scan<Self, DupFn<State>, Compute, State>
     where
         State: Copy,
-        Compute: FnMut(&State, Self::Item) -> State,
+        Compute: FnMut(State, Self::Item) -> State,
     {
         Scan {
             compute,
@@ -101,7 +102,7 @@ pub trait IterScan: Iterator + Sized {
         compute: Compute,
     ) -> Scan<Self, IdFn<Tpl2<State>>, Compute, State>
     where
-        Compute: FnMut(&State, Self::Item) -> Tpl2<State>,
+        Compute: FnMut(State, Self::Item) -> Tpl2<State>,
     {
         Scan {
             compute,
@@ -134,7 +135,7 @@ impl<Iter, Duplicate, Compute, State, Intermediate> Iterator
 where
     Iter: Iterator,
     Duplicate: FnMut(Intermediate) -> Tpl2<State>,
-    Compute: FnMut(&State, Iter::Item) -> Intermediate,
+    Compute: FnMut(State, Iter::Item) -> Intermediate,
 {
     type Item = State;
 
@@ -148,9 +149,9 @@ where
             ..
         } = self;
         let x = iter.next()?;
-        let (y1, y2) = duplicate(compute(state, x));
-        *state = y1;
-        Some(y2)
+        let f = |state| duplicate(compute(state, x));
+        let y = replace_with_or_abort_and_return(state, f);
+        Some(y)
     }
 
     #[inline]

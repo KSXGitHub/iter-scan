@@ -24,3 +24,10 @@ include = [
 [lib]
 name = "iter_scan"
 path = "lib.rs"
+
+[features]
+default = ["std"]
+std = ["replace_with/std"]
+
+[dependencies]
+replace_with = { version = "0.1.7", default-features = false, features = [] }
