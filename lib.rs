@@ -115,6 +115,10 @@ pub trait IterScan: Iterator + Sized {
 
 impl<X: Iterator + Sized> IterScan for X {}
 
+/// An iterator to maintain state while iterator over another iterator.
+///
+/// This `struct` is created by either [`IterScan::scan_clone`], [`IterScan::scan_copy`],
+/// or [`IterScan::scan_with_tuple`], see their documentation for more.
 #[derive(Clone)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Scan<Iter, Duplicate, Compute, State> {
