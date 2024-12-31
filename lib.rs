@@ -5,7 +5,7 @@ use replace_with::replace_with_or_abort_and_return;
 
 type IdFn<X> = fn(X) -> X;
 type DupFn<X> = fn(X) -> (X, X);
-type Tpl2<X> = (X, X);
+type StateFn<X0, X1> = fn((X0, X1)) -> (X0, (X0, X1));
 
 /// Iterator scan methods that don't suck.
 pub trait IterScan: Iterator + Sized {
@@ -34,7 +34,7 @@ pub trait IterScan: Iterator + Sized {
         self,
         initial: State,
         compute: Compute,
-    ) -> Scan<Self, DupFn<State>, Compute, State>
+    ) -> Scan<Self, DupFn<State>, Compute, State, State>
     where
         State: Clone,
         Compute: FnMut(State, Self::Item) -> State,
@@ -73,7 +73,7 @@ pub trait IterScan: Iterator + Sized {
         self,
         initial: State,
         compute: Compute,
-    ) -> Scan<Self, DupFn<State>, Compute, State>
+    ) -> Scan<Self, DupFn<State>, Compute, State, State>
     where
         State: Copy,
         Compute: FnMut(State, Self::Item) -> State,
@@ -87,6 +87,144 @@ pub trait IterScan: Iterator + Sized {
         }
     }
 
+    /// This iterator adapter holds an internal state and emit a tuple of this state and a mapped value on each iteration.
+    ///
+    /// This internal state can be [cloned](Clone).
+    ///
+    /// `scan_state_clone()` takes 2 arguments:
+    /// * An initial value which seeds the internal state.
+    /// * A closure that:
+    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
+    ///   - Returns the new state and the mapped value of the item.
+    ///
+    /// **Example:** Basic usage.
+    ///
+    /// ```
+    /// use iter_scan::IterScan;
+    /// enum SourceItem {
+    ///     Separator,
+    ///     Value(&'static str),
+    /// }
+    /// let source = [
+    ///     SourceItem::Value("zero"),
+    ///     SourceItem::Value("one"),
+    ///     SourceItem::Value("two"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("three"),
+    ///     SourceItem::Value("four"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("five"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("six"),
+    /// ];
+    /// let tagged: Vec<_> = source
+    ///     .into_iter()
+    ///     .scan_state_clone(0u32, |count, item| match item {
+    ///         SourceItem::Separator => (count + 1, None),
+    ///         SourceItem::Value(value) => (count, Some(value)),
+    ///     })
+    ///     .flat_map(|(count, item)| item.map(|item| (count, item)))
+    ///     .collect();
+    /// assert_eq!(
+    ///     &tagged,
+    ///     &[
+    ///         (0, "zero"),
+    ///         (0, "one"),
+    ///         (0, "two"),
+    ///         (1, "three"),
+    ///         (1, "four"),
+    ///         (2, "five"),
+    ///         (3, "six"),
+    ///     ],
+    /// );
+    /// ```
+    fn scan_state_clone<Compute, State, Value>(
+        self,
+        initial: State,
+        compute: Compute,
+    ) -> Scan<Self, StateFn<State, Value>, Compute, State, (State, Value)>
+    where
+        State: Clone,
+        Compute: FnMut(State, Self::Item) -> (State, Value),
+    {
+        Scan {
+            compute,
+            iter: self,
+            state: initial,
+            duplicate: |(state, value)| (state.clone(), (state, value)),
+            _phantom: Default::default(),
+        }
+    }
+
+    /// This iterator adapter holds an internal state and emit a tuple of this state and a mapped value on each iteration.
+    ///
+    /// This internal state can be [copied](Copy).
+    ///
+    /// `scan_state_copy()` takes 2 arguments:
+    /// * An initial value which seeds the internal state.
+    /// * A closure that:
+    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
+    ///   - Returns the new state and the mapped value of the item.
+    ///
+    /// **Example:** Basic usage.
+    ///
+    /// ```
+    /// use iter_scan::IterScan;
+    /// enum SourceItem {
+    ///     Separator,
+    ///     Value(&'static str),
+    /// }
+    /// let source = [
+    ///     SourceItem::Value("zero"),
+    ///     SourceItem::Value("one"),
+    ///     SourceItem::Value("two"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("three"),
+    ///     SourceItem::Value("four"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("five"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("six"),
+    /// ];
+    /// let tagged: Vec<_> = source
+    ///     .into_iter()
+    ///     .scan_state_copy(0u32, |count, item| match item {
+    ///         SourceItem::Separator => (count + 1, None),
+    ///         SourceItem::Value(value) => (count, Some(value)),
+    ///     })
+    ///     .flat_map(|(count, item)| item.map(|item| (count, item)))
+    ///     .collect();
+    /// assert_eq!(
+    ///     &tagged,
+    ///     &[
+    ///         (0, "zero"),
+    ///         (0, "one"),
+    ///         (0, "two"),
+    ///         (1, "three"),
+    ///         (1, "four"),
+    ///         (2, "five"),
+    ///         (3, "six"),
+    ///     ],
+    /// );
+    /// ```
+    fn scan_state_copy<Compute, State, Value>(
+        self,
+        initial: State,
+        compute: Compute,
+    ) -> Scan<Self, StateFn<State, Value>, Compute, State, (State, Value)>
+    where
+        State: Copy,
+        Compute: FnMut(State, Self::Item) -> (State, Value),
+    {
+        Scan {
+            compute,
+            iter: self,
+            state: initial,
+            duplicate: |(state, value)| (state, (state, value)),
+            _phantom: Default::default(),
+        }
+    }
+
     /// This iterator adapter holds an internal state and emit this state on each iteration.
     ///
     /// This adapter should be used when the internal state can neither be [cloned](Clone) nor [copied](Copy).
@@ -95,14 +233,56 @@ pub trait IterScan: Iterator + Sized {
     /// * An initial value which seeds the internal state.
     /// * A closure that:
     ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
-    ///   - Returns a tuple of the new state and its identical copy.
-    fn scan_with_tuple<Compute, State>(
+    ///   - Returns a tuple of the new state and a value.
+    ///
+    /// **Example:** Basic usage.
+    ///
+    /// ```
+    /// use iter_scan::IterScan;
+    /// enum SourceItem {
+    ///     Separator,
+    ///     Value(&'static str),
+    /// }
+    /// let source = [
+    ///     SourceItem::Value("zero"),
+    ///     SourceItem::Value("one"),
+    ///     SourceItem::Value("two"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("three"),
+    ///     SourceItem::Value("four"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("five"),
+    ///     SourceItem::Separator,
+    ///     SourceItem::Value("six"),
+    /// ];
+    /// let tagged: Vec<_> = source
+    ///     .into_iter()
+    ///     .scan_with_tuple(0u32, |prev_tag, item| match item {
+    ///         SourceItem::Separator => (prev_tag + 1, None),
+    ///         SourceItem::Value(value) => (prev_tag, Some((prev_tag, value))),
+    ///     })
+    ///     .flatten()
+    ///     .collect();
+    /// assert_eq!(
+    ///     &tagged,
+    ///     &[
+    ///         (0, "zero"),
+    ///         (0, "one"),
+    ///         (0, "two"),
+    ///         (1, "three"),
+    ///         (1, "four"),
+    ///         (2, "five"),
+    ///         (3, "six"),
+    ///     ],
+    /// );
+    /// ```
+    fn scan_with_tuple<Compute, State, Value>(
         self,
         initial: State,
         compute: Compute,
-    ) -> Scan<Self, IdFn<Tpl2<State>>, Compute, State>
+    ) -> Scan<Self, IdFn<(State, Value)>, Compute, State, Value>
     where
-        Compute: FnMut(State, Self::Item) -> Tpl2<State>,
+        Compute: FnMut(State, Self::Item) -> (State, Value),
     {
         Scan {
             compute,
@@ -122,22 +302,22 @@ impl<X: Iterator + Sized> IterScan for X {}
 /// or [`IterScan::scan_with_tuple`], see their documentation for more.
 #[derive(Clone)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
-pub struct Scan<Iter, Duplicate, Compute, State> {
+pub struct Scan<Iter, Duplicate, Compute, State, Value> {
     iter: Iter,
     state: State,
     duplicate: Duplicate,
     compute: Compute,
-    _phantom: PhantomData<State>,
+    _phantom: PhantomData<Value>,
 }
 
-impl<Iter, Duplicate, Compute, State, Intermediate> Iterator
-    for Scan<Iter, Duplicate, Compute, State>
+impl<Iter, Duplicate, Compute, State, Value, Intermediate> Iterator
+    for Scan<Iter, Duplicate, Compute, State, Value>
 where
     Iter: Iterator,
-    Duplicate: FnMut(Intermediate) -> Tpl2<State>,
+    Duplicate: FnMut(Intermediate) -> (State, Value),
     Compute: FnMut(State, Iter::Item) -> Intermediate,
 {
-    type Item = State;
+    type Item = Value;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -149,14 +329,15 @@ where
             ..
         } = self;
         let x = iter.next()?;
-        let f = |state| duplicate(compute(state, x));
-        let y = replace_with_or_abort_and_return(state, f);
+        let y = replace_with_or_abort_and_return(state, |state| {
+            let (state, y) = duplicate(compute(state, x));
+            (y, state)
+        });
         Some(y)
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let (_, upper) = self.iter.size_hint();
-        (0, upper) // can't know a lower bound, due to the scan function
+        self.iter.size_hint()
     }
 }
