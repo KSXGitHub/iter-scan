@@ -1,5 +1,6 @@
 #![doc = include_str!("README.md")]
 #![no_std]
+#![forbid(unsafe_code)]
 use core::marker::PhantomData;
 use replace_with::replace_with_or_abort_and_return;
 
