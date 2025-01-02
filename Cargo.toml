@@ -15,15 +15,12 @@ keywords = [
 ]
 categories = ["no-std", "rust-patterns"]
 include = [
-  "lib.rs",
+  "/docs",
+  "/src",
   "/Cargo.toml",
   "/README.md",
   "/LICENSE.md",
 ]
-
-[lib]
-name = "iter_scan"
-path = "lib.rs"
 
 [features]
 default = ["std"]

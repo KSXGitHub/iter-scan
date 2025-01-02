@@ -2,7 +2,7 @@ use crate::{ScanClone, ScanCopy, ScanStateClone, ScanStateCopy, ScanWithTuple};
 
 /// Iterator scan methods that don't suck.
 pub trait IterScan: Iterator + Sized {
-    #[doc = include_str!("docs/scan-clone.md")]
+    #[doc = include_str!("../docs/scan-clone.md")]
     fn scan_clone<Compute, State>(
         self,
         initial: State,
@@ -15,7 +15,7 @@ pub trait IterScan: Iterator + Sized {
         ScanClone::new(self, initial, compute)
     }
 
-    #[doc = include_str!("docs/scan-copy.md")]
+    #[doc = include_str!("../docs/scan-copy.md")]
     fn scan_copy<Compute, State>(
         self,
         initial: State,
@@ -28,7 +28,7 @@ pub trait IterScan: Iterator + Sized {
         ScanCopy::new(self, initial, compute)
     }
 
-    #[doc = include_str!("docs/scan-state-clone.md")]
+    #[doc = include_str!("../docs/scan-state-clone.md")]
     fn scan_state_clone<Compute, State, Value>(
         self,
         initial: State,
@@ -41,7 +41,7 @@ pub trait IterScan: Iterator + Sized {
         ScanStateClone::new(self, initial, compute)
     }
 
-    #[doc = include_str!("docs/scan-state-copy.md")]
+    #[doc = include_str!("../docs/scan-state-copy.md")]
     fn scan_state_copy<Compute, State, Value>(
         self,
         initial: State,
@@ -54,7 +54,7 @@ pub trait IterScan: Iterator + Sized {
         ScanStateCopy::new(self, initial, compute)
     }
 
-    #[doc = include_str!("docs/scan-with-tuple.md")]
+    #[doc = include_str!("../docs/scan-with-tuple.md")]
     fn scan_with_tuple<Compute, State, Value>(
         self,
         initial: State,
