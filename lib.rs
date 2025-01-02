@@ -10,27 +10,7 @@ type StateFn<X0, X1> = fn((X0, X1)) -> (X0, (X0, X1));
 
 /// Iterator scan methods that don't suck.
 pub trait IterScan: Iterator + Sized {
-    /// This iterator adapter holds an internal state and emit this state on each iteration.
-    ///
-    /// This internal state can be [cloned](Clone).
-    ///
-    /// `scan_clone()` takes 2 arguments:
-    /// * An initial value which seeds the internal state.
-    /// * A closure that:
-    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
-    ///   - Returns the new state for the next iteration.
-    ///
-    /// **Example:** Basic usage
-    ///
-    /// ```rust
-    /// use iter_scan::IterScan;
-    /// let input = ['a', 'b', 'c', 'd', 'e', 'f'];
-    /// let output: Vec<_> = input
-    ///     .into_iter()
-    ///     .scan_clone(String::new(), |acc, x| format!("{acc}{x}"))
-    ///     .collect();
-    /// assert_eq!(output, ["a", "ab", "abc", "abcd", "abcde", "abcdef"]);
-    /// ```
+    #[doc = include_str!("docs/scan-clone.md")]
     fn scan_clone<Compute, State>(
         self,
         initial: State,
@@ -49,27 +29,7 @@ pub trait IterScan: Iterator + Sized {
         }
     }
 
-    /// This iterator adapter holds an internal state and emit this state on each iteration.
-    ///
-    /// This internal state can be [copied](Copy).
-    ///
-    /// `scan_copy()` takes 2 arguments:
-    /// * An initial value which seeds the internal state.
-    /// * A closure that:
-    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
-    ///   - Returns the new state for the next iteration.
-    ///
-    /// **Example:** Basic usage
-    ///
-    /// ```rust
-    /// use iter_scan::IterScan;
-    /// let input = [2, 3, 4, 5];
-    /// let output: Vec<u64> = input
-    ///     .into_iter()
-    ///     .scan_copy(1, |acc, x| acc * x)
-    ///     .collect();
-    /// assert_eq!(output, [2, 6, 24, 120]);
-    /// ```
+    #[doc = include_str!("docs/scan-copy.md")]
     fn scan_copy<Compute, State>(
         self,
         initial: State,
@@ -88,57 +48,7 @@ pub trait IterScan: Iterator + Sized {
         }
     }
 
-    /// This iterator adapter holds an internal state and emit a tuple of this state and a mapped value on each iteration.
-    ///
-    /// This internal state can be [cloned](Clone).
-    ///
-    /// `scan_state_clone()` takes 2 arguments:
-    /// * An initial value which seeds the internal state.
-    /// * A closure that:
-    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
-    ///   - Returns the new state and the mapped value of the item.
-    ///
-    /// **Example:** Basic usage.
-    ///
-    /// ```
-    /// use iter_scan::IterScan;
-    /// enum SourceItem {
-    ///     Separator,
-    ///     Value(&'static str),
-    /// }
-    /// let source = [
-    ///     SourceItem::Value("zero"),
-    ///     SourceItem::Value("one"),
-    ///     SourceItem::Value("two"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("three"),
-    ///     SourceItem::Value("four"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("five"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("six"),
-    /// ];
-    /// let tagged: Vec<_> = source
-    ///     .into_iter()
-    ///     .scan_state_clone(0u32, |count, item| match item {
-    ///         SourceItem::Separator => (count + 1, None),
-    ///         SourceItem::Value(value) => (count, Some(value)),
-    ///     })
-    ///     .flat_map(|(count, item)| item.map(|item| (count, item)))
-    ///     .collect();
-    /// assert_eq!(
-    ///     &tagged,
-    ///     &[
-    ///         (0, "zero"),
-    ///         (0, "one"),
-    ///         (0, "two"),
-    ///         (1, "three"),
-    ///         (1, "four"),
-    ///         (2, "five"),
-    ///         (3, "six"),
-    ///     ],
-    /// );
-    /// ```
+    #[doc = include_str!("docs/scan-state-clone.md")]
     fn scan_state_clone<Compute, State, Value>(
         self,
         initial: State,
@@ -157,57 +67,7 @@ pub trait IterScan: Iterator + Sized {
         }
     }
 
-    /// This iterator adapter holds an internal state and emit a tuple of this state and a mapped value on each iteration.
-    ///
-    /// This internal state can be [copied](Copy).
-    ///
-    /// `scan_state_copy()` takes 2 arguments:
-    /// * An initial value which seeds the internal state.
-    /// * A closure that:
-    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
-    ///   - Returns the new state and the mapped value of the item.
-    ///
-    /// **Example:** Basic usage.
-    ///
-    /// ```
-    /// use iter_scan::IterScan;
-    /// enum SourceItem {
-    ///     Separator,
-    ///     Value(&'static str),
-    /// }
-    /// let source = [
-    ///     SourceItem::Value("zero"),
-    ///     SourceItem::Value("one"),
-    ///     SourceItem::Value("two"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("three"),
-    ///     SourceItem::Value("four"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("five"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("six"),
-    /// ];
-    /// let tagged: Vec<_> = source
-    ///     .into_iter()
-    ///     .scan_state_copy(0u32, |count, item| match item {
-    ///         SourceItem::Separator => (count + 1, None),
-    ///         SourceItem::Value(value) => (count, Some(value)),
-    ///     })
-    ///     .flat_map(|(count, item)| item.map(|item| (count, item)))
-    ///     .collect();
-    /// assert_eq!(
-    ///     &tagged,
-    ///     &[
-    ///         (0, "zero"),
-    ///         (0, "one"),
-    ///         (0, "two"),
-    ///         (1, "three"),
-    ///         (1, "four"),
-    ///         (2, "five"),
-    ///         (3, "six"),
-    ///     ],
-    /// );
-    /// ```
+    #[doc = include_str!("docs/scan-state-copy.md")]
     fn scan_state_copy<Compute, State, Value>(
         self,
         initial: State,
@@ -226,57 +86,7 @@ pub trait IterScan: Iterator + Sized {
         }
     }
 
-    /// This iterator adapter holds an internal state and emit this state on each iteration.
-    ///
-    /// This adapter should be used when the internal state can neither be [cloned](Clone) nor [copied](Copy).
-    ///
-    /// `scan_with_tuple()` takes 2 arguments:
-    /// * An initial value which seeds the internal state.
-    /// * A closure that:
-    ///   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
-    ///   - Returns a tuple of the new state and a value.
-    ///
-    /// **Example:** Basic usage.
-    ///
-    /// ```
-    /// use iter_scan::IterScan;
-    /// enum SourceItem {
-    ///     Separator,
-    ///     Value(&'static str),
-    /// }
-    /// let source = [
-    ///     SourceItem::Value("zero"),
-    ///     SourceItem::Value("one"),
-    ///     SourceItem::Value("two"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("three"),
-    ///     SourceItem::Value("four"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("five"),
-    ///     SourceItem::Separator,
-    ///     SourceItem::Value("six"),
-    /// ];
-    /// let tagged: Vec<_> = source
-    ///     .into_iter()
-    ///     .scan_with_tuple(0u32, |prev_tag, item| match item {
-    ///         SourceItem::Separator => (prev_tag + 1, None),
-    ///         SourceItem::Value(value) => (prev_tag, Some((prev_tag, value))),
-    ///     })
-    ///     .flatten()
-    ///     .collect();
-    /// assert_eq!(
-    ///     &tagged,
-    ///     &[
-    ///         (0, "zero"),
-    ///         (0, "one"),
-    ///         (0, "two"),
-    ///         (1, "three"),
-    ///         (1, "four"),
-    ///         (2, "five"),
-    ///         (3, "six"),
-    ///     ],
-    /// );
-    /// ```
+    #[doc = include_str!("docs/scan-with-tuple.md")]
     fn scan_with_tuple<Compute, State, Value>(
         self,
         initial: State,
