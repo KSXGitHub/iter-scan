@@ -12,10 +12,12 @@ This internal state can be [cloned](Clone).
 
 ```rust
 use iter_scan::IterScan;
+
 enum SourceItem {
     Separator,
     Value(&'static str),
 }
+
 let source = [
     SourceItem::Value("zero"),
     SourceItem::Value("one"),
@@ -28,6 +30,7 @@ let source = [
     SourceItem::Separator,
     SourceItem::Value("six"),
 ];
+
 let tagged: Vec<_> = source
     .into_iter()
     .scan_state_clone(0u32, |count, item| match item {
@@ -36,6 +39,7 @@ let tagged: Vec<_> = source
     })
     .flat_map(|(count, item)| item.map(|item| (count, item)))
     .collect();
+
 assert_eq!(
     &tagged,
     &[

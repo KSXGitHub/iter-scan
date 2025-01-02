@@ -12,10 +12,12 @@ This adapter should be used when the internal state can neither be [cloned](Clon
 
 ```rust
 use iter_scan::IterScan;
+
 enum SourceItem {
     Separator,
     Value(&'static str),
 }
+
 let source = [
     SourceItem::Value("zero"),
     SourceItem::Value("one"),
@@ -28,6 +30,7 @@ let source = [
     SourceItem::Separator,
     SourceItem::Value("six"),
 ];
+
 let tagged: Vec<_> = source
     .into_iter()
     .scan_with_tuple(0u32, |prev_tag, item| match item {
@@ -36,6 +39,7 @@ let tagged: Vec<_> = source
     })
     .flatten()
     .collect();
+
 assert_eq!(
     &tagged,
     &[
