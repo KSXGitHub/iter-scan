@@ -2,7 +2,7 @@ This iterator adapter holds an internal state and emit a tuple of this state and
 
 This internal state can be [copied](Copy).
 
-`scan_state_copy()` takes 2 arguments:
+[`scan_state_copy()`](Self::scan_state_copy) takes 2 arguments:
 * An initial value which seeds the internal state.
 * A closure that:
   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.

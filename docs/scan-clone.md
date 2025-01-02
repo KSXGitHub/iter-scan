@@ -2,7 +2,7 @@ This iterator adapter holds an internal state and emit this state on each iterat
 
 This internal state can be [cloned](Clone).
 
-`scan_clone()` takes 2 arguments:
+[`scan_clone()`](Self::scan_clone) takes 2 arguments:
 * An initial value which seeds the internal state.
 * A closure that:
   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.

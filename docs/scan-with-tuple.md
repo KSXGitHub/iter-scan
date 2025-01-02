@@ -2,7 +2,7 @@ This iterator adapter holds an internal state and emit this state on each iterat
 
 This adapter should be used when the internal state can neither be [cloned](Clone) nor [copied](Copy).
 
-`scan_with_tuple()` takes 2 arguments:
+[`scan_with_tuple()`](Self::scan_with_tuple) takes 2 arguments:
 * An initial value which seeds the internal state.
 * A closure that:
   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
