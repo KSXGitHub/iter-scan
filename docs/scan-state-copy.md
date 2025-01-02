@@ -8,7 +8,7 @@ This internal state can be [copied](Copy).
   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
   - Returns the new state and the mapped value of the item.
 
-**Example:** Basic usage.
+**Example:** Group indexing.
 
 ```rust
 use iter_scan::IterScan;

@@ -8,7 +8,7 @@ This adapter should be used when the internal state can neither be [cloned](Clon
   - Takes 2 arguments: Copy of the internal state from the previous iteration and the current item.
   - Returns a tuple of the new state and a value.
 
-**Example:** Basic usage.
+**Example:** Group indexing.
 
 ```rust
 use iter_scan::IterScan;
